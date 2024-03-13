@@ -9,6 +9,7 @@ to receive such patches depend on the CVSS v3.0 Rating:
 | --------- | ----------------------------------------- |
 | 4.0-10.0  | Most recent release                       |
 
+
 ## Reporting a Vulnerability
 
 Please report (suspected) security vulnerabilities to our **[bug bounty
