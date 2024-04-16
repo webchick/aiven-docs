@@ -18,22 +18,21 @@ usage on the server and better total performance.
 
 ## Maximum number of client connections
 
-Each pool can handle at least 5000 connections. This number increases for a pool by 500
-for each GB of RAM as per your service plan. To check the maximum number of client
-connections for your service, take into account the number of the connection pools and RAM
-GBs your service uses. Follow the sample calculation for a service using Business-4 plan
-with 4 GB of RAM and two connection pools:
+To check the maximum number of client connections for your service, take into account the
+number of the connection pools and RAM GBs your service uses, and apply the following rules:
+
+- Each pool can handle at least 5000 connections.
+- This number (5000) increases for a pool by 500 for each GB of RAM as per your service plan.
+- 50000 is the maximum number of client connections per service.
+
+For example, if a service using Business-4 plan with 4 GB of RAM has two connection pools,
+the maximum number of client connections that this service can handle is calculated as follows:
 
 - Pool 1: 5000 + (500 x 4) = 7000
 - Pool 2: 5000 + (500 x 4) = 7000
 - Pool 1 + Pool 2 = 14000
 
 This Business-4 service can handle 14000 client connections.
-
-:::note
-50000 is the maximum number of client connections per service and applies every time your
-calculated connection number exceeds 50000.
-:::
 
 ## Why connection pooling?
 
@@ -51,7 +50,8 @@ server has something to do (each connection can only utilise a single
 CPU core), but a hundred connections per CPU core may be too much. All
 this is workload-specific, but often a good number of connections to
 have is roughly 3-5 times the CPU core count. Aiven enforces
-[connection limits](/docs/products/postgresql/reference/pg-connection-limits) to avoid overloading the PostgreSQL database.
+[connection limits](/docs/products/postgresql/reference/pg-connection-limits) to avoid
+overloading the PostgreSQL database.
 
 :::note
 Since 9.6, PostgreSQL offers parallelization support enabling to [run
