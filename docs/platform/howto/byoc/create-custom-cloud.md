@@ -1,7 +1,10 @@
 ---
-title: Create an AWS custom cloud in Aiven
+title: Create a custom cloud in Aiven
 sidebar_label: Create custom clouds
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 Create a [custom cloud](/docs/platform/concepts/byoc) in your Aiven organization to better address your specific business needs or project requirements.
 
@@ -24,20 +27,14 @@ Create a [custom cloud](/docs/platform/concepts/byoc) in your Aiven organization
 
 ## About creating a custom cloud
 
-Before creating a custom cloud, take note of the
-[limitations](/docs/platform/howto/byoc/create-custom-cloud#byoc-limitations) and
-the [prerequisites](/docs/platform/howto/byoc/create-custom-cloud#byoc-prerequisites).
-
 The process of creating a custom cloud in Aiven differs depending on the
 cloud provider to integrate with:
 
--   To use the AWS cloud provider, create your custom cloud
-    yourself in [Aiven Console](https://console.aiven.io/).
-
-:::note[BYOC self-service in Aiven Console]
-You configure your custom cloud setup in [Aiven
+<Tabs groupId="group1">
+<TabItem value="1" label="AWS" default>
+You configure your custom cloud setup in the [Aiven
 Console](https://console.aiven.io/) and prepare your own AWS account so
-that Aiven can access it. In [Aiven Console](https://console.aiven.io/),
+that Aiven can access it. In the [Aiven Console](https://console.aiven.io/),
 you follow the **Create custom cloud** workflow to generate a Terraform
 infrastructure-as-code (IaC) template. Next, you deploy this template in
 your AWS account to acquire IAM Role ARN (Amazon Resource Name). You
@@ -46,10 +43,25 @@ gives Aiven the permissions to securely access your AWS account, create
 resources, and manage them onward. Finally, you select projects that can
 use your new custom clouds for creating services, and you add customer
 contacts for your custom cloud.
-:::
-
--   To use the GCP or Azure cloud providers, request the
-    Aiven team to create the cloud.
+</TabItem>
+<TabItem value="2" label="GCP">
+You configure your custom cloud setup in the [Aiven
+Console](https://console.aiven.io/) and prepare your own GCP account so
+that Aiven can access it. In the [Aiven Console](https://console.aiven.io/),
+you follow the **Create custom cloud** workflow to generate a Terraform
+infrastructure-as-code (IaC) template. Next, you deploy this template in
+your GCP account to acquire a service account ID. You
+supply your service account ID into the **Create custom cloud** wizard, which
+gives Aiven the permissions to securely access your GCP account, create
+resources, and manage them onward. Finally, you select projects that can
+use your new custom clouds for creating services, and you add customer
+contacts for your custom cloud.
+</TabItem>
+<TabItem value="3" label="Azure">
+To use the Azure cloud provider, [request the Aiven team](mailto:sales@aiven.io) to
+create the cloud.
+</TabItem>
+</Tabs>
 
 ## Limitations {#byoc-limitations}
 
@@ -57,422 +69,763 @@ contacts for your custom cloud.
     eligible for activating BYOC.
 
     :::note
-    Check out [Aiven support tiers](https://aiven.io/support-services) and
+    See [Aiven support tiers](https://aiven.io/support-services) and
     [Aiven responsibility matrix](https://aiven.io/responsibility-matrix) for BYOC.
     Contact the [sales team](mailto:sales@aiven.io) to learn more or upgrade your support
     tier.
     :::
 
--   To build your custom cloud with a cloud provider other
-    than AWS, request it as detailed in
-    [Enable bring your own cloud (BYOC) with Aiven](/docs/platform/howto/byoc/enable-byoc).
--   BYOC is supported with the
-    [standard deployment](/docs/platform/concepts/byoc#byoc-deployment) model only.
--   Only organization's administrators can create custom clouds.
+-   Creating custom clouds in the Aiven Console (BYOC self-service) is supported for the
+    AWS and GCP cloud providers only. To build your custom cloud with a cloud provider
+    other than AWS or GCP, request it as detailed in
+    [Create a custom cloud with Azure](#byoc-non-self-service).
+-   Only [super admins](/docs/platform/howto/make-super-admin) can create custom clouds.
 
 ## Prerequisites {#byoc-prerequisites}
 
 -   You have
     [enabled the BYOC feature](/docs/platform/howto/byoc/enable-byoc).
 -   You have an active account with your cloud provider.
--   You have access to [Aiven Console](https://console.aiven.io/)
-    ([to integrate with AWS](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)).
--   You have administrator's role in your Aiven organization
-    ([to integrate with AWS](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)).
+-   You have access to the [Aiven Console](https://console.aiven.io/)
+    ([to integrate with AWS or GCP](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)).
+-   You have the [super admin](/docs/platform/howto/make-super-admin) role in your Aiven organization
+    ([to integrate with AWS or GCP](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)).
 -   You have Terraform installed
-    ([to integrate with AWS](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)).
--   You have AWS credentials set up on your machine so that your user or
+    ([to integrate with AWS or GCP](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)).
+-   You have cloud account credentials set up on your machine so that your user or
     role has required Terraform permissions
-    ([to integrate with AWS](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws))
-    as follows:
+    ([to integrate with AWS or GCP](/docs/platform/howto/byoc/create-custom-cloud#create-cloud-aws)):
 
-<details><summary>
-Show permissions required for creating resources for bastion and
-workload networks
-</summary>
+    <Tabs groupId="group1">
+    <TabItem value="1" label="AWS permissions" default>
+    <details><summary>
+    Show permissions required for creating resources for bastion and
+    workload networks
+    </summary>
 
-```bash
-{
-    "Statement": [
-        {
-            "Action": [
-                "iam:AttachRolePolicy",
-                "iam:CreateRole",
-                "iam:DeleteRole",
-                "iam:DeleteRolePolicy",
-                "iam:GetRole",
-                "iam:GetRolePolicy",
-                "iam:ListAttachedRolePolicies",
-                "iam:ListInstanceProfilesForRole",
-                "iam:ListRolePolicies",
-                "iam:PutRolePolicy",
-                "iam:UpdateAssumeRolePolicy"
-            ],
-            "Effect": "Allow",
-            "Resource": "arn:aws:iam::*:role/cce-*-iam-role"
-        },
-        {
-            "Action": [
-                "ec2:DescribeAddresses",
-                "ec2:DescribeAddressesAttribute",
-                "ec2:DescribeAvailabilityZones",
-                "ec2:DescribeInternetGateways",
-                "ec2:DescribeNatGateways",
-                "ec2:DescribeNetworkInterfaces",
-                "ec2:DescribePrefixLists",
-                "ec2:DescribeRouteTables",
-                "ec2:DescribeSecurityGroups",
-                "ec2:DescribeSecurityGroupRules",
-                "ec2:DescribeStaleSecurityGroups",
-                "ec2:DescribeSubnets",
-                "ec2:DescribeVpcs",
-                "ec2:DescribeVpcEndpoints",
-                "ec2:DescribeVpcAttribute",
-                "ec2:DescribeTags"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "*"
-            ],
-            "Sid": "Describe"
-        },
-        {
-            "Action": [
-                "ec2:CreateTags"
-            ],
-            "Condition": {
-                "StringEquals": {
-                    "ec2:CreateAction": [
-                        "AllocateAddress",
-                        "CreateInternetGateway",
-                        "CreateNatGateway",
-                        "CreateRoute",
-                        "CreateRouteTable",
-                        "CreateSecurityGroup",
-                        "CreateSubnet",
-                        "CreateVpc",
-                        "CreateVpcEndpoint"
-                    ]
-                }
+    ```bash
+    {
+        "Statement": [
+            {
+                "Action": [
+                    "iam:AttachRolePolicy",
+                    "iam:CreateRole",
+                    "iam:DeleteRole",
+                    "iam:DeleteRolePolicy",
+                    "iam:GetRole",
+                    "iam:GetRolePolicy",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:ListInstanceProfilesForRole",
+                    "iam:ListRolePolicies",
+                    "iam:PutRolePolicy",
+                    "iam:UpdateAssumeRolePolicy"
+                ],
+                "Effect": "Allow",
+                "Resource": "arn:aws:iam::*:role/cce-*-iam-role"
             },
-            "Effect": "Allow",
-            "Resource": [
-                "*"
-            ],
-            "Sid": "CreateTag"
-        },
-        {
-            "Action": [
-                "ec2:DeleteTags"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:ec2:*:*:elastic-ip/*",
-                "arn:aws:ec2:*:*:internet-gateway/*",
-                "arn:aws:ec2:*:*:natgateway/*",
-                "arn:aws:ec2:*:*:route-table/*",
-                "arn:aws:ec2:*:*:security-group/*",
-                "arn:aws:ec2:*:*:security-group-rule/*",
-                "arn:aws:ec2:*:*:subnet/*",
-                "arn:aws:ec2:*:*:vpc/*"
-            ],
-            "Sid": "DeleteTag"
-        },
-        {
-            "Action": [
-                "ec2:AllocateAddress",
-                "ec2:CreateInternetGateway",
-                "ec2:CreateVpc"
-            ],
-            "Condition": {
-                "StringLike": {
-                    "aws:RequestTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:DescribeAddresses",
+                    "ec2:DescribeAddressesAttribute",
+                    "ec2:DescribeAvailabilityZones",
+                    "ec2:DescribeInternetGateways",
+                    "ec2:DescribeNatGateways",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DescribePrefixLists",
+                    "ec2:DescribeRouteTables",
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:DescribeSecurityGroupRules",
+                    "ec2:DescribeStaleSecurityGroups",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeVpcs",
+                    "ec2:DescribeVpcEndpoints",
+                    "ec2:DescribeVpcAttribute",
+                    "ec2:DescribeTags"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Describe"
             },
-            "Effect": "Allow",
-            "Resource": [
-                "*"
-            ],
-            "Sid": "Create"
-        },
-        {
-            "Action": [
-                "ec2:CreateNatGateway"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "ec2:ResourceTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateTags"
+                ],
+                "Condition": {
+                    "StringEquals": {
+                        "ec2:CreateAction": [
+                            "AllocateAddress",
+                            "CreateInternetGateway",
+                            "CreateNatGateway",
+                            "CreateRoute",
+                            "CreateRouteTable",
+                            "CreateSecurityGroup",
+                            "CreateSubnet",
+                            "CreateVpc",
+                            "CreateVpcEndpoint"
+                        ]
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "CreateTag"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:elastic-ip/*",
-                "arn:aws:ec2:*:*:subnet/*"
-            ],
-            "Sid": "CreateNGWAllowCCESubnetOnly"
-        },
-        {
-            "Action": [
-                "ec2:CreateNatGateway"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "aws:RequestTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:DeleteTags"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*",
+                    "arn:aws:ec2:*:*:internet-gateway/*",
+                    "arn:aws:ec2:*:*:natgateway/*",
+                    "arn:aws:ec2:*:*:route-table/*",
+                    "arn:aws:ec2:*:*:security-group/*",
+                    "arn:aws:ec2:*:*:security-group-rule/*",
+                    "arn:aws:ec2:*:*:subnet/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "DeleteTag"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:natgateway/*"
-            ],
-            "Sid": "CreateNGWAllowCCEOnly"
-        },
-        {
-            "Action": [
-                "ec2:CreateNatGateway"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:ec2:*:*:elastic-ip/*",
-                "arn:aws:ec2:*:*:natgateway/*",
-                "arn:aws:ec2:*:*:subnet/*"
-            ],
-            "Sid": "CreateNGW"
-        },
-        {
-            "Action": [
-                "ec2:CreateRouteTable",
-                "ec2:CreateSecurityGroup",
-                "ec2:CreateSubnet"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "ec2:ResourceTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:AllocateAddress",
+                    "ec2:CreateInternetGateway",
+                    "ec2:CreateVpc"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Create"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:vpc/*"
-            ],
-            "Sid": "CreateSubAllowCCEVPCOnly"
-        },
-        {
-            "Action": [
-                "ec2:CreateRouteTable"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "aws:RequestTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateNatGateway"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*",
+                    "arn:aws:ec2:*:*:subnet/*"
+                ],
+                "Sid": "CreateNGWAllowCCESubnetOnly"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:route-table/*"
-            ],
-            "Sid": "CreateRTAllowCCEOnly"
-        },
-        {
-            "Action": [
-                "ec2:CreateRouteTable"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:ec2:*:*:route-table/*",
-                "arn:aws:ec2:*:*:vpc/*"
-            ],
-            "Sid": "CreateRT"
-        },
-        {
-            "Action": [
-                "ec2:CreateSecurityGroup"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "aws:RequestTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateNatGateway"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:natgateway/*"
+                ],
+                "Sid": "CreateNGWAllowCCEOnly"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:security-group/*"
-            ],
-            "Sid": "CreateSGsAllowCCEOnly"
-        },
-        {
-            "Action": [
-                "ec2:CreateSecurityGroup"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:ec2:*:*:security-group/*",
-                "arn:aws:ec2:*:*:vpc/*"
-            ],
-            "Sid": "CreateSG"
-        },
-        {
-            "Action": [
-                "ec2:CreateSubnet"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "aws:RequestTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateNatGateway"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*",
+                    "arn:aws:ec2:*:*:natgateway/*",
+                    "arn:aws:ec2:*:*:subnet/*"
+                ],
+                "Sid": "CreateNGW"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:subnet/*"
-            ],
-            "Sid": "CreateSubAllowCCEOnly"
-        },
-        {
-            "Action": [
-                "ec2:CreateSubnet"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:ec2:*:*:subnet/*",
-                "arn:aws:ec2:*:*:vpc/*"
-            ],
-            "Sid": "CreateSubnets"
-        },
-        {
-            "Action": [
-                "ec2:CreateVpcEndpoint"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "*"
-            ],
-            "Sid": "CreateVpcEndpoint"
-        },
-        {
-            "Action": [
-                "ec2:AssociateAddress",
-                "ec2:AssociateRouteTable",
-                "ec2:AssociateSubnetCidrBlock",
-                "ec2:AssociateVpcCidrBlock",
-                "ec2:AssignPrivateNatGatewayAddress",
-                "ec2:AttachInternetGateway",
-                "ec2:AuthorizeSecurityGroupEgress",
-                "ec2:AuthorizeSecurityGroupIngress",
-                "ec2:CreateRoute",
-                "ec2:ModifySecurityGroupRules",
-                "ec2:ModifySubnetAttribute",
-                "ec2:ModifyVpcAttribute",
-                "ec2:ModifyVpcEndpoint",
-                "ec2:ReplaceRoute",
-                "ec2:ReplaceRouteTableAssociation",
-                "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
-                "ec2:UpdateSecurityGroupRuleDescriptionsIngress"
-            ],
-            "Condition": {
-                "StringLike": {
-                    "ec2:ResourceTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateRouteTable",
+                    "ec2:CreateSecurityGroup",
+                    "ec2:CreateSubnet"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateSubAllowCCEVPCOnly"
             },
-            "Effect": "Allow",
-            "Resource": [
-                "*"
-            ],
-            "Sid": "Modify"
-        },
-        {
-            "Action": [
-                "ec2:DisassociateAddress"
-            ],
-            "Condition": {
-                "StringNotLike": {
-                    "ec2:ResourceTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateRouteTable"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:route-table/*"
+                ],
+                "Sid": "CreateRTAllowCCEOnly"
             },
-            "Effect": "Deny",
-            "Resource": [
-                "arn:aws:ec2:*:*:elastic-ip/*"
-            ],
-            "Sid": "DisassociateEIPAllowCCEOnly"
-        },
-        {
-            "Action": [
-                "ec2:DisassociateAddress"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:ec2:*:*:*/*"
-            ],
-            "Sid": "DisassociateEIP"
-        },
-        {
-            "Action": [
-                "ec2:DetachInternetGateway",
-                "ec2:DisassociateNatGatewayAddress",
-                "ec2:DisassociateRouteTable",
-                "ec2:DisassociateSubnetCidrBlock",
-                "ec2:DisassociateVpcCidrBlock",
-                "ec2:DeleteInternetGateway",
-                "ec2:DeleteNatGateway",
-                "ec2:DeleteNetworkInterface",
-                "ec2:DeleteRoute",
-                "ec2:DeleteRouteTable",
-                "ec2:DeleteSecurityGroup",
-                "ec2:DeleteSubnet",
-                "ec2:DeleteVpc",
-                "ec2:DeleteVpcEndpoints",
-                "ec2:ReleaseAddress",
-                "ec2:RevokeSecurityGroupEgress",
-                "ec2:RevokeSecurityGroupIngress",
-                "ec2:UnassignPrivateNatGatewayAddress"
-            ],
-            "Condition": {
-                "StringLike": {
-                    "ec2:ResourceTag/Name": "cce-*"
-                }
+            {
+                "Action": [
+                    "ec2:CreateRouteTable"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:route-table/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateRT"
             },
-            "Effect": "Allow",
-            "Resource": [
-                "*"
-            ],
-            "Sid": "Delete"
-        }
-    ],
-    "Version": "2012-10-17"
-}
-```
+            {
+                "Action": [
+                    "ec2:CreateSecurityGroup"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:security-group/*"
+                ],
+                "Sid": "CreateSGsAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSecurityGroup"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:security-group/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateSG"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSubnet"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:subnet/*"
+                ],
+                "Sid": "CreateSubAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSubnet"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:subnet/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateSubnets"
+            },
+            {
+                "Action": [
+                    "ec2:CreateVpcEndpoint"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "CreateVpcEndpoint"
+            },
+            {
+                "Action": [
+                    "ec2:AssociateAddress",
+                    "ec2:AssociateRouteTable",
+                    "ec2:AssociateSubnetCidrBlock",
+                    "ec2:AssociateVpcCidrBlock",
+                    "ec2:AssignPrivateNatGatewayAddress",
+                    "ec2:AttachInternetGateway",
+                    "ec2:AuthorizeSecurityGroupEgress",
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "ec2:CreateRoute",
+                    "ec2:ModifySecurityGroupRules",
+                    "ec2:ModifySubnetAttribute",
+                    "ec2:ModifyVpcAttribute",
+                    "ec2:ModifyVpcEndpoint",
+                    "ec2:ReplaceRoute",
+                    "ec2:ReplaceRouteTableAssociation",
+                    "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
+                    "ec2:UpdateSecurityGroupRuleDescriptionsIngress"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Modify"
+            },
+            {
+                "Action": [
+                    "ec2:DisassociateAddress"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*"
+                ],
+                "Sid": "DisassociateEIPAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:DisassociateAddress"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:*/*"
+                ],
+                "Sid": "DisassociateEIP"
+            },
+            {
+                "Action": [
+                    "ec2:DetachInternetGateway",
+                    "ec2:DisassociateNatGatewayAddress",
+                    "ec2:DisassociateRouteTable",
+                    "ec2:DisassociateSubnetCidrBlock",
+                    "ec2:DisassociateVpcCidrBlock",
+                    "ec2:DeleteInternetGateway",
+                    "ec2:DeleteNatGateway",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DeleteRoute",
+                    "ec2:DeleteRouteTable",
+                    "ec2:DeleteSecurityGroup",
+                    "ec2:DeleteSubnet",
+                    "ec2:DeleteVpc",
+                    "ec2:DeleteVpcEndpoints",
+                    "ec2:ReleaseAddress",
+                    "ec2:RevokeSecurityGroupEgress",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:UnassignPrivateNatGatewayAddress"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Delete"
+            }
+        ],
+        "Version": "2012-10-17"
+    }
+    ```
 
-</details>
+    </details>
+    </TabItem>
+    <TabItem value="2" label="GCP permissions">
+    <details><summary>
+    Show permissions required for creating resources for bastion and
+    workload networks
+    </summary>
+
+    ```bash
+    {
+        "Statement": [
+            {
+                "Action": [
+                    "iam:AttachRolePolicy",
+                    "iam:CreateRole",
+                    "iam:DeleteRole",
+                    "iam:DeleteRolePolicy",
+                    "iam:GetRole",
+                    "iam:GetRolePolicy",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:ListInstanceProfilesForRole",
+                    "iam:ListRolePolicies",
+                    "iam:PutRolePolicy",
+                    "iam:UpdateAssumeRolePolicy"
+                ],
+                "Effect": "Allow",
+                "Resource": "arn:aws:iam::*:role/cce-*-iam-role"
+            },
+            {
+                "Action": [
+                    "ec2:DescribeAddresses",
+                    "ec2:DescribeAddressesAttribute",
+                    "ec2:DescribeAvailabilityZones",
+                    "ec2:DescribeInternetGateways",
+                    "ec2:DescribeNatGateways",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DescribePrefixLists",
+                    "ec2:DescribeRouteTables",
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:DescribeSecurityGroupRules",
+                    "ec2:DescribeStaleSecurityGroups",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeVpcs",
+                    "ec2:DescribeVpcEndpoints",
+                    "ec2:DescribeVpcAttribute",
+                    "ec2:DescribeTags"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Describe"
+            },
+            {
+                "Action": [
+                    "ec2:CreateTags"
+                ],
+                "Condition": {
+                    "StringEquals": {
+                        "ec2:CreateAction": [
+                            "AllocateAddress",
+                            "CreateInternetGateway",
+                            "CreateNatGateway",
+                            "CreateRoute",
+                            "CreateRouteTable",
+                            "CreateSecurityGroup",
+                            "CreateSubnet",
+                            "CreateVpc",
+                            "CreateVpcEndpoint"
+                        ]
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "CreateTag"
+            },
+            {
+                "Action": [
+                    "ec2:DeleteTags"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*",
+                    "arn:aws:ec2:*:*:internet-gateway/*",
+                    "arn:aws:ec2:*:*:natgateway/*",
+                    "arn:aws:ec2:*:*:route-table/*",
+                    "arn:aws:ec2:*:*:security-group/*",
+                    "arn:aws:ec2:*:*:security-group-rule/*",
+                    "arn:aws:ec2:*:*:subnet/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "DeleteTag"
+            },
+            {
+                "Action": [
+                    "ec2:AllocateAddress",
+                    "ec2:CreateInternetGateway",
+                    "ec2:CreateVpc"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Create"
+            },
+            {
+                "Action": [
+                    "ec2:CreateNatGateway"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*",
+                    "arn:aws:ec2:*:*:subnet/*"
+                ],
+                "Sid": "CreateNGWAllowCCESubnetOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateNatGateway"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:natgateway/*"
+                ],
+                "Sid": "CreateNGWAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateNatGateway"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*",
+                    "arn:aws:ec2:*:*:natgateway/*",
+                    "arn:aws:ec2:*:*:subnet/*"
+                ],
+                "Sid": "CreateNGW"
+            },
+            {
+                "Action": [
+                    "ec2:CreateRouteTable",
+                    "ec2:CreateSecurityGroup",
+                    "ec2:CreateSubnet"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateSubAllowCCEVPCOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateRouteTable"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:route-table/*"
+                ],
+                "Sid": "CreateRTAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateRouteTable"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:route-table/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateRT"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSecurityGroup"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:security-group/*"
+                ],
+                "Sid": "CreateSGsAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSecurityGroup"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:security-group/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateSG"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSubnet"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "aws:RequestTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:subnet/*"
+                ],
+                "Sid": "CreateSubAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:CreateSubnet"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:subnet/*",
+                    "arn:aws:ec2:*:*:vpc/*"
+                ],
+                "Sid": "CreateSubnets"
+            },
+            {
+                "Action": [
+                    "ec2:CreateVpcEndpoint"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "CreateVpcEndpoint"
+            },
+            {
+                "Action": [
+                    "ec2:AssociateAddress",
+                    "ec2:AssociateRouteTable",
+                    "ec2:AssociateSubnetCidrBlock",
+                    "ec2:AssociateVpcCidrBlock",
+                    "ec2:AssignPrivateNatGatewayAddress",
+                    "ec2:AttachInternetGateway",
+                    "ec2:AuthorizeSecurityGroupEgress",
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "ec2:CreateRoute",
+                    "ec2:ModifySecurityGroupRules",
+                    "ec2:ModifySubnetAttribute",
+                    "ec2:ModifyVpcAttribute",
+                    "ec2:ModifyVpcEndpoint",
+                    "ec2:ReplaceRoute",
+                    "ec2:ReplaceRouteTableAssociation",
+                    "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
+                    "ec2:UpdateSecurityGroupRuleDescriptionsIngress"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Modify"
+            },
+            {
+                "Action": [
+                    "ec2:DisassociateAddress"
+                ],
+                "Condition": {
+                    "StringNotLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Deny",
+                "Resource": [
+                    "arn:aws:ec2:*:*:elastic-ip/*"
+                ],
+                "Sid": "DisassociateEIPAllowCCEOnly"
+            },
+            {
+                "Action": [
+                    "ec2:DisassociateAddress"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:ec2:*:*:*/*"
+                ],
+                "Sid": "DisassociateEIP"
+            },
+            {
+                "Action": [
+                    "ec2:DetachInternetGateway",
+                    "ec2:DisassociateNatGatewayAddress",
+                    "ec2:DisassociateRouteTable",
+                    "ec2:DisassociateSubnetCidrBlock",
+                    "ec2:DisassociateVpcCidrBlock",
+                    "ec2:DeleteInternetGateway",
+                    "ec2:DeleteNatGateway",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DeleteRoute",
+                    "ec2:DeleteRouteTable",
+                    "ec2:DeleteSecurityGroup",
+                    "ec2:DeleteSubnet",
+                    "ec2:DeleteVpc",
+                    "ec2:DeleteVpcEndpoints",
+                    "ec2:ReleaseAddress",
+                    "ec2:RevokeSecurityGroupEgress",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:UnassignPrivateNatGatewayAddress"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "ec2:ResourceTag/Name": "cce-*"
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": [
+                    "*"
+                ],
+                "Sid": "Delete"
+            }
+        ],
+        "Version": "2012-10-17"
+    }
+    ```
+
+    </details>
+    </TabItem>
+    </Tabs>
 
 ## Create a custom cloud {#create-cloud}
 
-### Create a custom cloud with GCP or Azure {#create-cloud-non-aws}
+<Tabs groupId="group1">
+<TabItem value="1" label="AWS and GCP" default>
 
-To use the GCP or Azure cloud providers, you'll have your
-custom cloud created by the Aiven team (not via [Aiven
-Console](https://console.aiven.io/)). Therefore, after
-[enabling the BYOC feature](/docs/platform/howto/byoc/enable-byoc) in
-[Aiven Console](https://console.aiven.io/), there are no
-further actions required from you to create your custom cloud. we'll
-build your custom cloud for you according to the specifications you
-provided while
-[enabling BYOC](/docs/platform/howto/byoc/enable-byoc) in
-[Aiven Console](https://console.aiven.io/). We might
-reach out to you for more details if needed and follow up with you to
-keep you informed on the progress.
+### Create a custom cloud with AWS or GCP {#byoc-self-service}
 
-### Create a custom cloud with AWS {#create-cloud-aws}
-
-Create your infrastructure template in [Aiven
-Console](https://console.aiven.io/), deploy the template in your AWS
-account to generate Role ARN, and get back to [Aiven
-Console](https://console.aiven.io/) with your Role ARN to proceed with
-your custom cloud configuration. Finalize the setup by selecting in
-which projects to use your custom cloud and assigning a contact
-person for your custom cloud.
+Create your infrastructure template in the [Aiven Console](https://console.aiven.io/),
+deploy the template in your own cloud account to generate Role ARN (AWS) or a service
+account ID (GCP), and get back to the [Aiven Console](https://console.aiven.io/) with your
+Role ARN / service account ID to proceed with the custom cloud configuration. Finalize the
+setup by selecting in which Aiven projects to use your custom cloud and by assigning a
+contact person for your custom cloud.
 
 #### Launch the BYOC setup in Aiven Console
 
-1.  Log in to [Aiven Console](https://console.aiven.io/) as an
+1.  Log in to the [Aiven Console](https://console.aiven.io/) as an
     administrator, and go to a desired organization.
 1.  From the top navigation bar, select **Admin**.
 1.  From the left sidebar, select **Bring your own cloud**.
-1.  In the **Bring your own cloud** view, select **Create custom
-    cloud**.
+1.  In the **Bring your own cloud** view, select **Create custom cloud**.
 
 #### Generate an infrastructure template {#generate-infra-template}
 
@@ -488,7 +841,7 @@ In the **Create custom cloud** wizard:
 
     -   Custom cloud name
 
-    -   Cloud provider (AWS only)
+    -   Cloud provider
 
     -   Region
 
@@ -526,6 +879,17 @@ In the **Create custom cloud** wizard:
             blocks of VPCs you plan to peer your BYOC VPC with. You
             cannot change the BYOC VPC CIDR block after your custom
             cloud is created.
+
+    -   Deployment model: Choose between
+        [the private architecture and the public architecture](/docs/platform/concepts/byoc).
+
+        - Private model routes traffic through a proxy for additional security utilizing
+          a bastion host physically separated from the Aiven services.
+        - Public model allows the Aiven control plane to connect to the service nodes
+          via the public Internet.
+
+    -   Infrastructure tags: Select key-value pairs to
+        [tag your custom cloud resources](/docs/platform/howto/byoc/tag-custom-cloud-resources).
 
 1.  Select **Next**.
 
@@ -678,6 +1042,25 @@ As soon as you new custom cloud gets the **Active** status, remove the
 Terraform resources your created in your AWS account while creating the
 cloud. See the guidelines on how to use the `destroy` command in
 [Command: destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy).
+</TabItem>
+<TabItem value="3" label="Azure">
+
+### Create a custom cloud with Azure {#byoc-non-self-service}
+
+To use the Azure cloud provider, you'll have your
+custom cloud created by the Aiven team (not via [Aiven
+Console](https://console.aiven.io/)). Therefore, after
+[enabling the BYOC feature](/docs/platform/howto/byoc/enable-byoc) in
+[Aiven Console](https://console.aiven.io/), there are no
+further actions required from you to create your custom cloud. we'll
+build your custom cloud for you according to the specifications you
+provided while
+[enabling BYOC](/docs/platform/howto/byoc/enable-byoc) in
+[Aiven Console](https://console.aiven.io/). We might
+reach out to you for more details if needed and follow up with you to
+keep you informed on the progress.
+</TabItem>
+</Tabs>
 
 ## Manage services in custom clouds
 
@@ -685,7 +1068,7 @@ cloud. See the guidelines on how to use the `destroy` command in
 
 To create a service in [Aiven Console](https://console.aiven.io/) in your new custom
 cloud, follow the guidelines in
-[Create a new service](/docs/platform/howto/create_new_service).
+[Create a service](/docs/platform/howto/create_new_service).
 
 When creating a service in the [Aiven Console](https://console.aiven.io/), at the
 **Select service region** step, select **Custom clouds** from the available regions.
@@ -702,4 +1085,5 @@ information.
 -   [Enable bring your own cloud (BYOC)](/docs/platform/howto/byoc/enable-byoc)
 -   [Assign a project to your custom cloud](/docs/platform/howto/byoc/assign-project-custom-cloud)
 -   [Add customer's contact information for your custom cloud](/docs/platform/howto/byoc/add-customer-info-custom-cloud)
+-   [Tag custom cloud resources](/docs/platform/howto/byoc/tag-custom-cloud-resources)
 -   [Rename your custom cloud](/docs/platform/howto/byoc/rename-custom-cloud)
