@@ -110,6 +110,7 @@ Grafana
 Grafana/M
 GSuite
 hardcoded
+HAProxy
 HashiCorp
 Heatmap
 Hillyer
